@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gra Kosmiczna</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        padding: 50px;
+        overflow: hidden;
+        position: relative;
+    }
+    #gameCanvas {
+        border: 1px solid #000;
+        display: block;
+        margin: 0 auto;
+    }
+    #message {
+        display: none;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgba(0, 0, 0, 0.8);
+        color: white;
+        font-size: 30px;
+        padding: 20px;
+        z-index: 1;
+    }
+    .monkey {
+        position: absolute;
+        animation: monkeyDance 1s infinite;
+    }
+    @keyframes monkeyDance {
+        0% { transform: translateY(0); }
+        50% { transform: translateY(-20px); }
+        100% { transform: translateY(0); }
+    }
+    .heart {
+        position: absolute;
+        animation: heartPop 1s infinite;
+    }
+    @keyframes heartPop {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+    }
+    #ring {
+        position: absolute;
+        bottom: -100px;
+        left: 50%;
+        transform: translateX(-50%);
+        animation: ringFly 5s ease-in-out;
+        z-index: 2;
+        display: none;
+    }
+    @keyframes ringFly {
+        0% { transform: translate(-50%, 0); }
+        50% { transform: translate(-50%, -50%); }
+        100% { transform: translate(-50%, 100%); }
+    }
+</style>
+</head>
+<body>
+<h1>Gra Kosmiczna</h1>
+<canvas id="gameCanvas" width="800" height="400"></canvas>
+<div id="message">Alinka KOCHAM CIE ZOSTAŃ MOJĄ ŻONĄ</div>
+<img id="ring" src="https://emojicdn.elk.sh/💍" width="100" height="100" alt="Pierscionek zaręczynowy">
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const shipWidth = 40;
+const shipHeight = 40;
+const asteroidWidth = 40;
+const asteroidHeight = 40;
+const starWidth = 20;
+const starHeight = 20;
+let shipX = canvas.width / 2 - shipWidth / 2;
+let shipY = canvas.height - shipHeight - 10;
+let asteroidX = Math.random() * (canvas.width - asteroidWidth);
+let asteroidY = -asteroidHeight;
+let starX = Math.random() * (canvas.width - starWidth);
+let starY = -starHeight;
+let score = 0;
+let messageDisplayed = false;
+
+function drawShip() {
+    ctx.fillStyle = 'blue';
+    ctx.fillRect(shipX, shipY, shipWidth, shipHeight);
+}
+
+function drawAsteroid() {
+    ctx.fillStyle = 'gray';
+    ctx.fillRect(asteroidX, asteroidY, asteroidWidth, asteroidHeight);
+}
+
+function drawStar() {
+    ctx.fillStyle = 'yellow';
+    ctx.fillRect(starX, starY, starWidth, starHeight);
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawShip();
+    drawAsteroid();
+    drawStar();
+    moveAsteroid();
+    moveStar();
+    checkCollision();
+    checkStarCollection();
+    if (score >= 10 && !messageDisplayed) {
+        displayMessage();
+        spawnMonkeys();
+        spawnHearts();
+        messageDisplayed = true;
+    } else {
+        requestAnimationFrame(draw);
+    }
+}
+
+function moveAsteroid() {
+    asteroidY += 2;
+    if (asteroidY > canvas.height) {
+        asteroidX = Math.random() * (canvas.width - asteroidWidth);
+        asteroidY = -asteroidHeight;
+    }
+}
+
+function moveStar() {
+    starY += 3;
+    if (starY > canvas.height) {
+        starX = Math.random() * (canvas.width - starWidth);
+        starY = -starHeight;
+    }
+}
+
+function checkCollision() {
+    if (
+        shipX < asteroidX + asteroidWidth &&
+        shipX + shipWidth > asteroidX &&
+        shipY < asteroidY + asteroidHeight &&
+        shipY + shipHeight > asteroidY
+    ) {
+        alert('Game Over!');
+        document.location.reload();
+    }
+}
+
+function checkStarCollection() {
+    if (
+        shipX < starX + starWidth &&
+        shipX + shipWidth > starX &&
+        shipY < starY + starHeight &&
+        shipY + shipHeight > starY
+    ) {
+        score++;
+        starX = Math.random() * (canvas.width - starWidth);
+        starY = -starHeight;
+    }
+}
+
+function displayMessage() {
+    const message = document.getElementById('message');
+    message.style.display = 'block';
+    const ring = document.getElementById('ring');
+    ring.style.display = 'block';
+}
+
+function spawnMonkeys() {
+    const monkeyCount = 10;
+    const monkeySize = 50;
+    for (let i = 0; i < monkeyCount; i++) {
+        const monkey = document.createElement('img');
+        monkey.src = 'https://emojicdn.elk.sh/🐵';
+        monkey.classList.add('monkey');
+        monkey.style.left = `${Math.random() * canvas.width}px`;
+        monkey.style.top = `${Math.random() * canvas.height}px`;
+        document.body.appendChild(monkey);
+    }
+}
+
+function spawnHearts() {
+    const heartCount = 20;
+    const heartSize = 50;
+    for (let i = 0; i < heartCount; i++) {
+        const heart = document.createElement('img');
+        heart.src = 'https://emojicdn.elk.sh/❤️';
+        heart.classList.add('heart');
+        heart.style.left = `${Math.random() * canvas.width}px`;
+        heart.style.top = `${Math.random() * canvas.height}px`;
+        document.body.appendChild(heart);
+    }
+}
+
+document.addEventListener('keydown', e => {
+    switch (e.key) {
+        case 'ArrowLeft':
+            if (shipX > 0) {
+                shipX -= 10;
+            }
+            break;
+        case 'ArrowRight':
+            if (shipX < canvas.width - shipWidth) {
+                shipX += 10;
+            }
+            break;
+    }
+});
+
+draw();
+</script>
+</body>
